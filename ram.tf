@@ -12,6 +12,13 @@ locals {
   ) : [])
 }
 
+check "retain_sharing_requires_external_principals" {
+  assert {
+    condition     = !var.retain_sharing_on_account_leave_organization || var.allow_external_principals
+    error_message = "retain_sharing_on_account_leave_organization requires allow_external_principals = true."
+  }
+}
+
 # Resource Access Manager (RAM) share for the Transit Gateway
 # https://docs.aws.amazon.com/ram/latest/userguide/what-is.html
 resource "aws_ram_resource_share" "default" {
@@ -19,6 +26,17 @@ resource "aws_ram_resource_share" "default" {
   name                      = module.this.id
   allow_external_principals = var.allow_external_principals
   tags                      = module.this.tags
+
+  dynamic "resource_share_configuration" {
+    for_each = var.retain_sharing_on_account_leave_organization ? [1] : []
+    content {
+      retain_sharing_on_account_leave_organization = true
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Share the Transit Gateway with the Organization if RAM principal was not provided
