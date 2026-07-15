@@ -19,6 +19,23 @@ resource "aws_ram_resource_share" "default" {
   name                      = module.this.id
   allow_external_principals = var.allow_external_principals
   tags                      = module.this.tags
+
+  dynamic "resource_share_configuration" {
+    for_each = var.retain_sharing_on_account_leave_organization ? [1] : []
+    content {
+      retain_sharing_on_account_leave_organization = true
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+
+    # check {} only warns; precondition fails plan/apply for invalid combos
+    precondition {
+      condition     = !var.retain_sharing_on_account_leave_organization || var.allow_external_principals
+      error_message = "retain_sharing_on_account_leave_organization requires allow_external_principals = true."
+    }
+  }
 }
 
 # Share the Transit Gateway with the Organization if RAM principal was not provided

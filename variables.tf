@@ -73,6 +73,16 @@ variable "allow_external_principals" {
   description = "Indicates whether principals outside your organization can be associated with a resource share"
 }
 
+variable "retain_sharing_on_account_leave_organization" {
+  type        = bool
+  default     = false
+  description = <<-EOT
+    When true, consumer accounts retain access to the resource share after leaving the
+    AWS Organization. Requires allow_external_principals = true. AWS only allows this
+  setting when the resource share is created; enabling it forces replacement of the share.
+  EOT
+}
+
 variable "vpc_attachment_appliance_mode_support" {
   type        = string
   default     = "disable"
