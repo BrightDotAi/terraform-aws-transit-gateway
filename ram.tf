@@ -12,13 +12,6 @@ locals {
   ) : [])
 }
 
-check "retain_sharing_requires_external_principals" {
-  assert {
-    condition     = !var.retain_sharing_on_account_leave_organization || var.allow_external_principals
-    error_message = "retain_sharing_on_account_leave_organization requires allow_external_principals = true."
-  }
-}
-
 # Resource Access Manager (RAM) share for the Transit Gateway
 # https://docs.aws.amazon.com/ram/latest/userguide/what-is.html
 resource "aws_ram_resource_share" "default" {
@@ -36,6 +29,12 @@ resource "aws_ram_resource_share" "default" {
 
   lifecycle {
     create_before_destroy = true
+
+    # check {} only warns; precondition fails plan/apply for invalid combos
+    precondition {
+      condition     = !var.retain_sharing_on_account_leave_organization || var.allow_external_principals
+      error_message = "retain_sharing_on_account_leave_organization requires allow_external_principals = true."
+    }
   }
 }
 
