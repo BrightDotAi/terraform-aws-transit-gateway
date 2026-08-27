@@ -26,8 +26,7 @@ variable "ram_principals" {
     * Organization ARN
     * Organization Unit ARN
 
-    If this (and var.ram_principal) is not provided and
-    `ram_resource_share_enabled` is `true`, the Organization ARN will be used.
+    Empty means the share has no principals.
   EOT
 }
 
