@@ -1,14 +1,11 @@
 locals {
   ram_resource_share_enabled = module.this.enabled && var.ram_resource_share_enabled
 
-  ram_principals_provided = var.ram_principal != null || length(var.ram_principals) > 0
-  ram_principals = toset(local.ram_resource_share_enabled ? toset(
-    local.ram_principals_provided ? concat(
-      var.ram_principal == null ? [] : [var.ram_principal],
-      var.ram_principals,
-      ) : [
-      data.aws_organizations_organization.default[0].arn
-    ]
+  # No org-wide fallback: the account may belong to a third-party (CloudKeeper)
+  # organization, so empty principals must mean "share with nobody".
+  ram_principals = toset(local.ram_resource_share_enabled ? concat(
+    var.ram_principal == null ? [] : [var.ram_principal],
+    var.ram_principals,
   ) : [])
 }
 
@@ -36,11 +33,6 @@ resource "aws_ram_resource_share" "default" {
       error_message = "retain_sharing_on_account_leave_organization requires allow_external_principals = true."
     }
   }
-}
-
-# Share the Transit Gateway with the Organization if RAM principal was not provided
-data "aws_organizations_organization" "default" {
-  count = local.ram_resource_share_enabled && !local.ram_principals_provided ? 1 : 0
 }
 
 resource "aws_ram_resource_association" "default" {
